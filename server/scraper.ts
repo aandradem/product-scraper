@@ -7,6 +7,7 @@ export interface ScrapedProductData {
   originalPrice?: string;
   currency?: string;
   sku?: string;
+  ean?: string;
   category?: string;
   brand?: string;
   availability?: string;
@@ -22,6 +23,9 @@ export interface ScrapedProductData {
   metaDescription?: string;
   metaKeywords?: string;
   weight?: string;
+  height?: string;
+  width?: string;
+  length?: string;
   dimensions?: Record<string, string>;
   shippingTime?: string;
 }

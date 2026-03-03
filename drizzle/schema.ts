@@ -1,17 +1,10 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
  */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
@@ -26,49 +19,92 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
- * Products table for storing scraped e-commerce product data with VTEX fields
+ * Products table with complete VTEX standard fields
  */
 export const products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
   sourceUrl: text("sourceUrl").notNull(),
   
-  // Basic product info
-  name: text("name"),
-  description: text("description"),
+  // === PRODUTO (Obrigatório) ===
+  productName: text("productName"),
+  productDescription: text("productDescription"),
+  productReferenceCode: varchar("productReferenceCode", { length: 255 }),
+  productKeywords: text("productKeywords"),
+  productMetaTitle: text("productMetaTitle"),
+  productMetaDescription: text("productMetaDescription"),
+  productShowOnWebsite: boolean("productShowOnWebsite").default(true),
+  productShowWithoutStock: boolean("productShowWithoutStock").default(false),
+  productLaunchDate: timestamp("productLaunchDate"),
+  productActive: boolean("productActive").default(true),
+  
+  // === DEPARTAMENTO E CATEGORIA ===
+  departmentId: varchar("departmentId", { length: 100 }),
+  departmentName: varchar("departmentName", { length: 255 }),
+  categoryId: varchar("categoryId", { length: 100 }),
+  categoryName: varchar("categoryName", { length: 255 }),
+  
+  // === MARCA ===
+  brandId: varchar("brandId", { length: 100 }),
+  brandName: varchar("brandName", { length: 255 }),
+  
+  // === SKU (Código do Produto) ===
+  skuId: varchar("skuId", { length: 100 }),
+  skuCode: varchar("skuCode", { length: 100 }),
+  skuEan: varchar("skuEan", { length: 100 }),
+  skuReferenceCode: varchar("skuReferenceCode", { length: 255 }),
+  skuManufacturerCode: varchar("skuManufacturerCode", { length: 255 }),
+  skuActive: boolean("skuActive").default(true),
+  skuActivateIfPossible: boolean("skuActivateIfPossible").default(true),
+  
+  // === DIMENSÕES (Medidas) ===
+  height: varchar("height", { length: 50 }),
+  heightReal: varchar("heightReal", { length: 50 }),
+  width: varchar("width", { length: 50 }),
+  widthReal: varchar("widthReal", { length: 50 }),
+  length: varchar("length", { length: 50 }),
+  lengthReal: varchar("lengthReal", { length: 50 }),
+  weight: varchar("weight", { length: 50 }),
+  weightReal: varchar("weightReal", { length: 50 }),
+  unitOfMeasure: varchar("unitOfMeasure", { length: 50 }),
+  unitMultiplier: varchar("unitMultiplier", { length: 50 }),
+  cubicWeight: varchar("cubicWeight", { length: 50 }),
+  
+  // === PREÇO E DISPONIBILIDADE ===
   price: varchar("price", { length: 100 }),
   originalPrice: varchar("originalPrice", { length: 100 }),
   currency: varchar("currency", { length: 10 }),
-  
-  // VTEX specific fields
-  sku: varchar("sku", { length: 100 }),
-  category: text("category"),
-  brand: varchar("brand", { length: 255 }),
+  loyaltyValue: varchar("loyaltyValue", { length: 100 }),
   availability: varchar("availability", { length: 50 }),
   availabilityQuantity: int("availabilityQuantity"),
+  estimatedArrivalDate: timestamp("estimatedArrivalDate"),
   
-  // Product details
+  // === COMERCIAL ===
+  commercialCondition: varchar("commercialCondition", { length: 255 }),
+  stores: text("stores"),
+  
+  // === RELACIONAMENTOS ===
+  accessories: text("accessories"),
+  similar: text("similar"),
+  suggestions: text("suggestions"),
+  showTogether: text("showTogether"),
+  attachments: text("attachments"),
+  
+  // === MÍDIA ===
   images: text("images"),
+  
+  // === ESPECIFICAÇÕES E CAMPOS CUSTOMIZADOS ===
   specifications: text("specifications"),
+  customFields: text("customFields"),
   nutritionalInfo: text("nutritionalInfo"),
   variants: text("variants"),
   
-  // Ratings and reviews
+  // === AVALIAÇÕES ===
   rating: varchar("rating", { length: 10 }),
   reviewCount: int("reviewCount"),
   reviews: text("reviews"),
   
-  // SEO and metadata
-  metaTitle: text("metaTitle"),
-  metaDescription: text("metaDescription"),
-  metaKeywords: text("metaKeywords"),
-  
-  // Shipping and dimensions
-  weight: varchar("weight", { length: 50 }),
-  dimensions: text("dimensions"),
-  shippingTime: varchar("shippingTime", { length: 100 }),
-  
-  // Additional fields
+  // === METADADOS ===
   rawHtml: text("rawHtml"),
   extractedData: text("extractedData"),
   status: mysqlEnum("status", ["pending", "success", "error"]).default("pending").notNull(),
@@ -79,3 +115,20 @@ export const products = mysqlTable("products", {
 
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
+
+/**
+ * Specifications table for storing custom VTEX specifications
+ */
+export const specifications = mysqlTable("specifications", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull().references(() => products.id, { onDelete: "cascade" }),
+  specificationId: varchar("specificationId", { length: 100 }),
+  specificationName: varchar("specificationName", { length: 255 }).notNull(),
+  specificationValue: text("specificationValue"),
+  specificationFieldType: varchar("specificationFieldType", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Specification = typeof specifications.$inferSelect;
+export type InsertSpecification = typeof specifications.$inferInsert;
