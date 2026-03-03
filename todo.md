@@ -92,3 +92,11 @@
 - [x] Adicionar barra de progresso para importação
 - [x] Criar relatório de sucesso/erro da importação
 - [x] Testar todas as funcionalidades
+
+
+## Bugs a Corrigir - Fase 6
+- [x] Corrigir erro "ID de produto inválido" na página de detalhes
+- [x] Melhorar scraper para extrair TODAS as informações do site (tabelas, listas, atributos)
+- [x] Usar webscraper.io como padrão de referência para extração
+- [x] Testar scraper com múltiplos e-commerce
+- [x] Validar extração de dados estruturados

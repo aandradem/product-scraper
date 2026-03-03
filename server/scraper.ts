@@ -24,6 +24,9 @@ export interface ScrapedProductData {
   weight?: string;
   dimensions?: Record<string, string>;
   shippingTime?: string;
+  tables?: Array<Record<string, string>>;
+  attributes?: Record<string, string>;
+  allText?: string;
 }
 
 /**
@@ -38,7 +41,7 @@ export async function fetchHtmlContent(url: string): Promise<string> {
     
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
       signal: controller.signal,
     });
@@ -70,62 +73,73 @@ export async function fetchHtmlContent(url: string): Promise<string> {
 
 /**
  * Use LLM to intelligently extract product data from HTML
- * Optimized for VTEX and other Brazilian e-commerce platforms
+ * Optimized for VTEX, webscraper.io, and other e-commerce platforms
  */
 export async function extractProductDataWithLLM(
   html: string,
   sourceUrl: string
 ): Promise<ScrapedProductData> {
   try {
-    const truncatedHtml = html.substring(0, 80000);
+    const truncatedHtml = html.substring(0, 100000);
 
-    const systemPrompt = `You are an expert at extracting product information from e-commerce HTML pages, especially VTEX and Brazilian e-commerce platforms.
+    const systemPrompt = `You are an expert at extracting product information from e-commerce HTML pages.
+    
+EXTRACT ABSOLUTELY EVERYTHING from the page:
+- All text content (tables, lists, paragraphs)
+- All product attributes and specifications
+- All images and media
+- All prices and availability info
+- All reviews and ratings
+- All structured data (JSON-LD, microdata)
+- All metadata
+- All dimensions, weight, shipping info
 
-ANALYZE THE HTML VERY CAREFULLY AND EXTRACT ALL AVAILABLE PRODUCT INFORMATION COMPREHENSIVELY.
-
-Return ONLY a valid JSON object with this structure (omit fields not found):
+Return ONLY a valid JSON object with this structure:
 {
-  "name": "Complete product name/title",
-  "description": "Full product description with all details",
-  "price": "Current price with currency symbol (e.g., R$ 26,90)",
-  "originalPrice": "Original price before discount if available",
-  "currency": "Currency code or symbol (BRL, R$, etc.)",
-  "sku": "Product SKU/code",
+  "name": "Complete product name",
+  "description": "Full detailed description with all text",
+  "price": "Current price with currency",
+  "originalPrice": "Original price if available",
+  "currency": "Currency code",
+  "sku": "Product SKU",
   "category": "Full category path",
-  "brand": "Product brand/manufacturer",
-  "availability": "Stock status (Em Estoque, Fora de Estoque, etc.)",
-  "availabilityQuantity": "Quantity as number",
-  "images": ["image_url_1", "image_url_2"],
-  "specifications": {"spec_name": "spec_value"},
+  "brand": "Brand name",
+  "availability": "Stock status",
+  "availabilityQuantity": 0,
+  "images": ["url1", "url2"],
+  "specifications": {"key": "value"},
   "nutritionalInfo": {"nutrient": "value"},
   "variants": [{"option": "value"}],
-  "rating": "Rating number (e.g., 4.5)",
-  "reviewCount": "Number of reviews",
+  "rating": "4.5",
+  "reviewCount": 0,
   "reviews": [{"author": "name", "rating": "5", "text": "review"}],
   "metaTitle": "Page title",
   "metaDescription": "Page description",
-  "metaKeywords": "Page keywords",
-  "weight": "Weight with unit (e.g., 450g, 1kg)",
-  "dimensions": {"height": "value", "width": "value", "length": "value"},
-  "shippingTime": "Shipping time (e.g., 2-5 dias uteis)"
+  "metaKeywords": "keywords",
+  "weight": "Weight with unit",
+  "dimensions": {"height": "value", "width": "value"},
+  "shippingTime": "Shipping time",
+  "tables": [{"header": "value"}],
+  "attributes": {"attr": "value"},
+  "allText": "All visible text from page"
 }
 
-CRITICAL EXTRACTION RULES:
-1. EXTRACT EVERY VISIBLE PIECE OF INFORMATION
-2. For name: Get the complete product title/name
-3. For description: Extract FULL description, not just summary
-4. For price: Include currency symbol exactly as shown (R$ 26,90 not 26.90)
-5. For specifications: Look in tables, lists, accordion sections, data attributes
-6. For nutritional info: Extract from nutrition labels/tables completely
-7. For images: Get ALL product images with absolute URLs
-8. For weight/dimensions: Include units exactly (450,0000 GRM, 10cm, etc.)
-9. For variants: Extract all color, size, flavor options
-10. For ratings: Look for star ratings and review counts
-11. Search for VTEX data-* attributes and JSON-LD structured data
-12. Extract from meta tags, H1, product details sections
-13. Return ONLY valid JSON - no markdown, no extra text
-14. If field not found, omit it from response
-15. Be thorough and extract EVERYTHING available on the page`;
+CRITICAL RULES:
+1. EXTRACT EVERYTHING - no field is too small or unimportant
+2. Look in ALL sections: headers, tables, lists, accordion, modals, data attributes
+3. For images: extract ALL product images with absolute URLs
+4. For specifications: extract from tables, lists, dl/dt/dd, data-* attributes
+5. For nutritional info: extract complete nutrition facts tables
+6. For text: include ALL visible text content in "allText" field
+7. For tables: extract all table data into "tables" array
+8. For attributes: extract all HTML attributes and data-* values
+9. For price: keep original format with currency symbol
+10. For dimensions: include units exactly as shown
+11. Search JSON-LD, microdata, VTEX data, structured data
+12. Extract from meta tags, og:*, twitter:*, schema.org
+13. Return ONLY valid JSON - no markdown, no extra text, no comments
+14. If field not found, omit it (don't use null)
+15. Be THOROUGH - extract EVERY piece of information available`;
 
     const response = await invokeLLM({
       messages: [
@@ -135,13 +149,13 @@ CRITICAL EXTRACTION RULES:
         },
         {
           role: "user",
-          content: `Extract ALL product information from this HTML page. Be comprehensive and extract every detail available:\n\n${truncatedHtml}`,
+          content: `Extract ABSOLUTELY ALL product information from this HTML page. Extract every detail, every table, every attribute, every piece of text. Be comprehensive:\n\n${truncatedHtml}`,
         },
       ],
       response_format: {
         type: "json_schema",
         json_schema: {
-          name: "product_extraction_vtex",
+          name: "product_extraction_complete",
           strict: false,
           schema: {
             type: "object",
@@ -169,6 +183,9 @@ CRITICAL EXTRACTION RULES:
               weight: { type: "string" },
               dimensions: { type: "object" },
               shippingTime: { type: "string" },
+              tables: { type: "array" },
+              attributes: { type: "object" },
+              allText: { type: "string" },
             },
             required: [],
             additionalProperties: false,
@@ -198,9 +215,8 @@ CRITICAL EXTRACTION RULES:
  */
 export async function scrapeProductFromUrl(url: string): Promise<{
   data: ScrapedProductData;
-  html: string;
 }> {
   const html = await fetchHtmlContent(url);
   const data = await extractProductDataWithLLM(html, url);
-  return { data, html };
+  return { data };
 }
