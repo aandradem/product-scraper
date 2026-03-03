@@ -47,3 +47,22 @@
 - [x] Validar e sanitizar dados antes de inserir no banco de dados
 - [x] Corrigir erro de NaN ao buscar produto por ID (validação de parseInt)
 - [x] Adicionar import de useAuth faltante no Home.tsx
+
+
+## Novas Funcionalidades - VTEX Completo
+
+### Fase 1: Campos VTEX Expandidos
+- [x] Adicionar campos VTEX ao schema: SKU, categoria, disponibilidade, avaliações, variações, peso, dimensões
+- [x] Atualizar scraper para extrair todos os campos VTEX automaticamente
+- [x] Melhorar prompt do LLM para reconhecer padrões VTEX
+- [x] Atualizar página de detalhes para exibir todos os campos
+
+### Fase 2: Busca e Duplicação
+- [ ] Implementar campo de busca em tempo real na Home
+- [ ] Adicionar botão de duplicação de produtos
+- [ ] Criar interface de edição para produtos duplicados
+
+### Fase 3: Histórico de Extrações
+- [ ] Criar tabela de histórico com data/hora de extrações
+- [ ] Adicionar filtros por data, status e URL
+- [ ] Implementar reextração de URLs anteriores

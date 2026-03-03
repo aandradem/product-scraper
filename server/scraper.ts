@@ -4,13 +4,26 @@ export interface ScrapedProductData {
   name?: string;
   description?: string;
   price?: string;
+  originalPrice?: string;
   currency?: string;
+  sku?: string;
+  category?: string;
+  brand?: string;
+  availability?: string;
+  availabilityQuantity?: number;
   images?: string[];
   specifications?: Record<string, string | number>;
   nutritionalInfo?: Record<string, string | number>;
+  variants?: Array<Record<string, string>>;
+  rating?: string;
+  reviewCount?: number;
+  reviews?: Array<Record<string, string>>;
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string;
+  weight?: string;
+  dimensions?: Record<string, string>;
+  shippingTime?: string;
 }
 
 /**
@@ -18,7 +31,6 @@ export interface ScrapedProductData {
  */
 export async function fetchHtmlContent(url: string): Promise<string> {
   try {
-    // Validate URL format
     const urlObj = new URL(url);
     
     const controller = new AbortController();
@@ -58,82 +70,97 @@ export async function fetchHtmlContent(url: string): Promise<string> {
 
 /**
  * Use LLM to intelligently extract product data from HTML
- * The LLM analyzes the structure and extracts relevant fields
- * even when the HTML structure varies between different e-commerce sites
+ * Optimized for VTEX and other Brazilian e-commerce platforms
  */
 export async function extractProductDataWithLLM(
   html: string,
   sourceUrl: string
 ): Promise<ScrapedProductData> {
   try {
-    // Truncate HTML if too large (keep first 50KB for LLM)
     const truncatedHtml = html.substring(0, 50000);
 
     const response = await invokeLLM({
       messages: [
         {
           role: "system",
-          content: `You are an expert at extracting product information from e-commerce HTML pages.
+          content: `You are an expert at extracting product information from e-commerce HTML pages, especially VTEX and Brazilian e-commerce platforms.
 
-Analyze the provided HTML and extract product information. Be thorough and extract ALL available data.
+Analyze the provided HTML and extract ALL available product information comprehensively.
 
 Return a JSON object with the following structure:
 {
   "name": "Product name",
   "description": "Product description or summary",
-  "price": "Price value (just the number or with currency symbol)",
-  "currency": "Currency code (USD, BRL, EUR, etc.) or empty string if not found",
+  "price": "Current price (just the number or with currency symbol)",
+  "originalPrice": "Original price before discount (if available)",
+  "currency": "Currency code (BRL, USD, EUR, etc.) or empty string",
+  "sku": "Product SKU or code",
+  "category": "Product category path (e.g., Electronics > Smartphones)",
+  "brand": "Product brand/manufacturer",
+  "availability": "Availability status (in stock, out of stock, pre-order, etc.)",
+  "availabilityQuantity": "Quantity available as number",
   "images": ["URL1", "URL2", ...],
   "specifications": {"spec_name": "spec_value", ...},
   "nutritionalInfo": {"nutrient_name": "nutrient_value", ...},
+  "variants": [{"variant_name": "variant_value", ...}],
+  "rating": "Average rating (e.g., 4.5)",
+  "reviewCount": "Number of reviews as number",
+  "reviews": [{"author": "name", "rating": "5", "text": "review text"}],
   "metaTitle": "Page title from meta tags",
   "metaDescription": "Page description from meta tags",
-  "metaKeywords": "Page keywords from meta tags"
+  "metaKeywords": "Page keywords from meta tags",
+  "weight": "Product weight (e.g., 500g, 1kg)",
+  "dimensions": {"height": "10cm", "width": "5cm", "depth": "3cm"},
+  "shippingTime": "Estimated shipping time (e.g., 2-5 business days)"
 }
 
 Rules:
 - Extract ALL specifications and nutritional information found
 - For images, extract full URLs (absolute URLs, not relative)
+- Look for VTEX-specific patterns and common Brazilian e-commerce structures
+- Extract price with and without discount if available
+- Extract all product variants/options
+- Extract ratings and reviews if available
 - If a field is not found, omit it or use null
 - Be precise and extract exact values from the HTML
-- Look for common e-commerce patterns like product-info, product-details, specs, nutrition-table, etc.
-- Handle different HTML structures and class names intelligently`,
+- Handle different HTML structures intelligently`,
         },
         {
           role: "user",
-          content: `Extract product information from this HTML: ${truncatedHtml}`,
+          content: `Extract comprehensive product information from this HTML: ${truncatedHtml}`,
         },
       ],
       response_format: {
         type: "json_schema",
         json_schema: {
-          name: "product_extraction",
+          name: "product_extraction_vtex",
           strict: true,
           schema: {
             type: "object",
             properties: {
-              name: { type: "string", description: "Product name" },
-              description: { type: "string", description: "Product description" },
-              price: { type: "string", description: "Price value" },
-              currency: { type: "string", description: "Currency code" },
-              images: {
-                type: "array",
-                items: { type: "string" },
-                description: "Product image URLs",
-              },
-              specifications: {
-                type: "object",
-                additionalProperties: { type: "string" },
-                description: "Product specifications",
-              },
-              nutritionalInfo: {
-                type: "object",
-                additionalProperties: { type: "string" },
-                description: "Nutritional information",
-              },
-              metaTitle: { type: "string", description: "Meta title" },
-              metaDescription: { type: "string", description: "Meta description" },
-              metaKeywords: { type: "string", description: "Meta keywords" },
+              name: { type: "string" },
+              description: { type: "string" },
+              price: { type: "string" },
+              originalPrice: { type: "string" },
+              currency: { type: "string" },
+              sku: { type: "string" },
+              category: { type: "string" },
+              brand: { type: "string" },
+              availability: { type: "string" },
+              availabilityQuantity: { type: "number" },
+              images: { type: "array", items: { type: "string" } },
+              specifications: { type: "object", additionalProperties: { type: "string" } },
+              nutritionalInfo: { type: "object", additionalProperties: { type: "string" } },
+              variants: { type: "array", items: { type: "object" } },
+              rating: { type: "string" },
+              reviewCount: { type: "number" },
+              reviews: { type: "array", items: { type: "object" } },
+              metaTitle: { type: "string" },
+              metaDescription: { type: "string" },
+              metaKeywords: { type: "string" },
+              weight: { type: "string" },
+              dimensions: { type: "object", additionalProperties: { type: "string" } },
+              shippingTime: { type: "string" },
             },
             required: [],
             additionalProperties: false,
@@ -159,20 +186,13 @@ Rules:
 }
 
 /**
- * Main scraping function that combines fetching and LLM extraction
+ * Main function to scrape product from URL
  */
-export async function scrapeProductFromUrl(
-  url: string
-): Promise<{ data: ScrapedProductData; html: string }> {
-  try {
-    // Fetch HTML
-    const html = await fetchHtmlContent(url);
-
-    // Extract data using LLM
-    const data = await extractProductDataWithLLM(html, url);
-
-    return { data, html };
-  } catch (error) {
-    throw error;
-  }
+export async function scrapeProductFromUrl(url: string): Promise<{
+  data: ScrapedProductData;
+  html: string;
+}> {
+  const html = await fetchHtmlContent(url);
+  const data = await extractProductDataWithLLM(html, url);
+  return { data, html };
 }
