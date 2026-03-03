@@ -174,7 +174,7 @@ export default function Home() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle className="line-clamp-2 text-lg">
-                          {product.productName || "Produto sem nome"}
+                          {product.name || "Produto sem nome"}
                         </CardTitle>
                         {product.price && (
                           <p className="text-lg font-bold text-blue-600 dark:text-blue-400 mt-2">
@@ -196,9 +196,9 @@ export default function Home() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {product.productDescription && (
+                    {product.description && (
                       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-4">
-                        {product.productDescription}
+                        {product.description}
                       </p>
                     )}
                     

@@ -76,29 +76,26 @@ export default function ProductDetail({ id }: ProductDetailProps) {
 
   const images = product.images ? JSON.parse(product.images as string) : [];
   const specs = product.specifications ? JSON.parse(product.specifications as string) : {};
-  const customFields = product.customFields ? JSON.parse(product.customFields as string) : {};
   const nutrition = product.nutritionalInfo ? JSON.parse(product.nutritionalInfo as string) : {};
   const variants = product.variants ? JSON.parse(product.variants as string) : [];
   const reviews = product.reviews ? JSON.parse(product.reviews as string) : [];
-  const stores = product.stores ? JSON.parse(product.stores as string) : [];
-  const accessories = product.accessories ? JSON.parse(product.accessories as string) : [];
+  const dimensions = product.dimensions ? JSON.parse(product.dimensions as string) : {};
 
   const handleEdit = () => {
     setEditData({
       id: product.id,
-      productName: product.productName,
-      productDescription: product.productDescription,
+      name: product.name,
+      description: product.description,
       price: product.price,
       originalPrice: product.originalPrice,
       currency: product.currency,
-      skuCode: product.skuCode,
-      skuEan: product.skuEan,
-      categoryName: product.categoryName,
-      brandName: product.brandName,
+      sku: product.sku,
+      category: product.category,
+      brand: product.brand,
       availability: product.availability,
       availabilityQuantity: product.availabilityQuantity,
       weight: product.weight,
-      weightReal: product.weightReal,
+      shippingTime: product.shippingTime,
       images: images,
       specifications: specs,
       nutritionalInfo: nutrition,
@@ -132,25 +129,23 @@ export default function ProductDetail({ id }: ProductDetailProps) {
   const handleDownload = (format: "json" | "csv") => {
     const dataToExport = {
       id: product.id,
-      productName: product.productName,
-      productDescription: product.productDescription,
+      name: product.name,
+      description: product.description,
       price: product.price,
       originalPrice: product.originalPrice,
       currency: product.currency,
-      skuCode: product.skuCode,
-      skuEan: product.skuEan,
-      categoryName: product.categoryName,
-      brandName: product.brandName,
+      sku: product.sku,
+      category: product.category,
+      brand: product.brand,
       availability: product.availability,
       availabilityQuantity: product.availabilityQuantity,
+      rating: product.rating,
+      reviewCount: product.reviewCount,
       weight: product.weight,
-      weightReal: product.weightReal,
-      height: product.height,
-      width: product.width,
-      length: product.length,
+      dimensions,
+      shippingTime: product.shippingTime,
       images,
       specifications: specs,
-      customFields,
       nutritionalInfo: nutrition,
       variants,
       reviews,
@@ -168,24 +163,24 @@ export default function ProductDetail({ id }: ProductDetailProps) {
       a.click();
     } else if (format === "csv") {
       let csv = "Campo,Valor\n";
-      csv += `Nome,"${product.productName || ""}"\n`;
-      csv += `Descrição,"${(product.productDescription || "").replace(/"/g, '""')}"\n`;
+      csv += `Nome,"${product.name || ""}"\n`;
+      csv += `Descrição,"${(product.description || "").replace(/"/g, '""')}"\n`;
       csv += `Preço,${product.price || ""}\n`;
       csv += `Preço Original,${product.originalPrice || ""}\n`;
       csv += `Moeda,${product.currency || ""}\n`;
-      csv += `SKU,${product.skuCode || ""}\n`;
-      csv += `EAN,${product.skuEan || ""}\n`;
-      csv += `Categoria,${product.categoryName || ""}\n`;
-      csv += `Marca,${product.brandName || ""}\n`;
+      csv += `SKU,${product.sku || ""}\n`;
+      csv += `Categoria,${product.category || ""}\n`;
+      csv += `Marca,${product.brand || ""}\n`;
       csv += `Disponibilidade,${product.availability || ""}\n`;
       csv += `Quantidade,${product.availabilityQuantity || ""}\n`;
+      csv += `Avaliação,${product.rating || ""}\n`;
+      csv += `Número de Reviews,${product.reviewCount || ""}\n`;
       csv += `Peso,${product.weight || ""}\n`;
-      csv += `Altura,${product.height || ""}\n`;
-      csv += `Largura,${product.width || ""}\n`;
-      csv += `Comprimento,${product.length || ""}\n`;
+      csv += `Tempo de Envio,${product.shippingTime || ""}\n`;
       csv += `Imagens,${images.length}\n`;
       csv += `Especificações,${Object.keys(specs).length}\n`;
-      csv += `Campos Customizados,${Object.keys(customFields).length}\n`;
+      csv += `Informações Nutricionais,${Object.keys(nutrition).length}\n`;
+      csv += `Variantes,${variants.length}\n`;
 
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
@@ -210,12 +205,12 @@ export default function ProductDetail({ id }: ProductDetailProps) {
             <div className="flex justify-between items-start mb-8">
               <div className="flex-1">
                 <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                  {product.productName || "Produto sem nome"}
+                  {product.name || "Produto sem nome"}
                 </h1>
-                {product.brandName && (
+                {product.brand && (
                   <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
                     <Tag className="w-4 h-4 inline mr-2" />
-                    {product.brandName}
+                    {product.brand}
                   </p>
                 )}
                 <div className="flex gap-6 mb-4">
@@ -261,20 +256,12 @@ export default function ProductDetail({ id }: ProductDetailProps) {
             </div>
 
             {/* Informações VTEX */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              {product.skuCode && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              {product.sku && (
                 <Card className="shadow-lg border-0">
                   <CardContent className="pt-6">
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">SKU</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{product.skuCode}</p>
-                  </CardContent>
-                </Card>
-              )}
-              {product.skuEan && (
-                <Card className="shadow-lg border-0">
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">EAN</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{product.skuEan}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{product.sku}</p>
                   </CardContent>
                 </Card>
               )}
@@ -286,11 +273,11 @@ export default function ProductDetail({ id }: ProductDetailProps) {
                   </CardContent>
                 </Card>
               )}
-              {product.categoryName && (
+              {product.category && (
                 <Card className="shadow-lg border-0">
                   <CardContent className="pt-6">
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Categoria</p>
-                    <p className="font-semibold text-gray-900 dark:text-white truncate">{product.categoryName}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">{product.category}</p>
                   </CardContent>
                 </Card>
               )}
@@ -318,52 +305,50 @@ export default function ProductDetail({ id }: ProductDetailProps) {
             )}
 
             {/* Descrição */}
-            {product.productDescription && (
+            {product.description && (
               <Card className="mb-8 shadow-lg border-0">
                 <CardHeader>
                   <CardTitle>Descrição</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                    {product.productDescription}
+                    {product.description}
                   </p>
                 </CardContent>
               </Card>
             )}
 
-            {/* Informações de Envio e Dimensões */}
-            {(product.weight || product.height || product.width || product.length) && (
+            {/* Informações de Envio */}
+            {(product.weight || product.shippingTime || Object.keys(dimensions).length > 0) && (
               <Card className="mb-8 shadow-lg border-0">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Truck className="w-5 h-5" />
-                    Dimensões e Peso
+                    Informações de Envio
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {product.height && (
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Altura</p>
-                        <p className="font-semibold">{product.height}</p>
-                      </div>
-                    )}
-                    {product.width && (
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Largura</p>
-                        <p className="font-semibold">{product.width}</p>
-                      </div>
-                    )}
-                    {product.length && (
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Comprimento</p>
-                        <p className="font-semibold">{product.length}</p>
-                      </div>
-                    )}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {product.weight && (
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">Peso</p>
                         <p className="font-semibold">{product.weight}</p>
+                      </div>
+                    )}
+                    {product.shippingTime && (
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Tempo de Envio</p>
+                        <p className="font-semibold">{product.shippingTime}</p>
+                      </div>
+                    )}
+                    {Object.keys(dimensions).length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Dimensões</p>
+                        <p className="font-semibold text-sm">
+                          {dimensions.height && `A: ${dimensions.height}`}
+                          {dimensions.width && ` x L: ${dimensions.width}`}
+                          {dimensions.depth && ` x P: ${dimensions.depth}`}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -383,25 +368,6 @@ export default function ProductDetail({ id }: ProductDetailProps) {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {Object.entries(specs).map(([key, value]) => (
-                      <div key={key}>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">{key}</p>
-                        <p className="font-semibold text-gray-900 dark:text-white">{String(value)}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Campos Customizados */}
-            {Object.keys(customFields).length > 0 && (
-              <Card className="mb-8 shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle>Campos Customizados</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(customFields).map(([key, value]) => (
                       <div key={key}>
                         <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">{key}</p>
                         <p className="font-semibold text-gray-900 dark:text-white">{String(value)}</p>
@@ -483,16 +449,16 @@ export default function ProductDetail({ id }: ProductDetailProps) {
               <div>
                 <label className="text-sm font-medium mb-2 block">Nome</label>
                 <Input
-                  value={editData?.productName || ""}
-                  onChange={(e) => setEditData({ ...editData, productName: e.target.value })}
+                  value={editData?.name || ""}
+                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
                 />
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">Descrição</label>
                 <Textarea
                   placeholder="Descrição"
-                  value={editData?.productDescription || ""}
-                  onChange={(e) => setEditData({ ...editData, productDescription: e.target.value })}
+                  value={editData?.description || ""}
+                  onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                 />
               </div>
               <div>
@@ -512,29 +478,22 @@ export default function ProductDetail({ id }: ProductDetailProps) {
               <div>
                 <label className="text-sm font-medium mb-2 block">SKU</label>
                 <Input
-                  value={editData?.skuCode || ""}
-                  onChange={(e) => setEditData({ ...editData, skuCode: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">EAN</label>
-                <Input
-                  value={editData?.skuEan || ""}
-                  onChange={(e) => setEditData({ ...editData, skuEan: e.target.value })}
+                  value={editData?.sku || ""}
+                  onChange={(e) => setEditData({ ...editData, sku: e.target.value })}
                 />
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">Marca</label>
                 <Input
-                  value={editData?.brandName || ""}
-                  onChange={(e) => setEditData({ ...editData, brandName: e.target.value })}
+                  value={editData?.brand || ""}
+                  onChange={(e) => setEditData({ ...editData, brand: e.target.value })}
                 />
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">Categoria</label>
                 <Input
-                  value={editData?.categoryName || ""}
-                  onChange={(e) => setEditData({ ...editData, categoryName: e.target.value })}
+                  value={editData?.category || ""}
+                  onChange={(e) => setEditData({ ...editData, category: e.target.value })}
                 />
               </div>
               <div className="flex gap-4">
