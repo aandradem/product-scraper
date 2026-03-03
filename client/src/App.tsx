@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import ExtractionHistory from "./pages/ExtractionHistory";
 import QualityDashboard from "./pages/QualityDashboard";
 import ProductDetail from "./pages/ProductDetail";
 
@@ -12,9 +13,11 @@ function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
+      <Route path={"/?from_webdev=1"} component={Home} />
       <Route path={"/"} component={Home} />
-      <Route path={"/quality-dashboard"} component={QualityDashboard} />
-      <Route path={"/product/:id"} component={(props: any) => <ProductDetail id={props.id} />} />
+      <Route path={"/quality"} component={QualityDashboard} />
+      <Route path={"/history"} component={ExtractionHistory} />
+      <Route path={"/product/:id"} component={ProductDetail} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

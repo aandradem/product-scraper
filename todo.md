@@ -151,3 +151,15 @@
 - [x] Corrigir erro de ID na página de produto /product/90002
 - [x] Validar que a página abre com IDs válidos
 - [x] Melhorar tratamento de erros de ID inválido
+
+
+## Fase 12: Histórico de Extrações
+- [x] Criar tabela de histórico no banco de dados
+- [x] Adicionar campos: id, userId, sourceUrl, productId, status, errorMessage, createdAt
+- [x] Implementar procedimento tRPC para listar histórico
+- [x] Implementar procedimento tRPC para reextrair URL
+- [x] Criar página de histórico com tabela
+- [x] Adicionar filtros por data, status e URL
+- [x] Implementar ação de reextraçãocom confirmação
+- [x] Adicionar indicadores visuais de status
+- [x] Testar histórico com múltiplas extrações

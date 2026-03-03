@@ -1,6 +1,6 @@
 import { eq, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, Product, InsertProduct, products } from "../drizzle/schema";
+import { InsertUser, users, Product, InsertProduct, products, extractionHistory, ExtractionHistory, InsertExtractionHistory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -151,6 +151,64 @@ export async function searchProducts(userId: number, query: string) {
     )
     .orderBy(desc(products.createdAt));
   return result;
+}
+
+export async function createExtractionHistory(data: InsertExtractionHistory): Promise<ExtractionHistory | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create extraction history: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(extractionHistory).values(data);
+    const id = result[0].insertId;
+    const history = await db.select().from(extractionHistory).where(eq(extractionHistory.id, Number(id))).limit(1);
+    return history.length > 0 ? history[0] : null;
+  } catch (error) {
+    console.error("[Database] Failed to create extraction history:", error);
+    return null;
+  }
+}
+
+export async function getExtractionHistory(userId: number, limit: number = 50, offset: number = 0) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get extraction history: database not available");
+    return [];
+  }
+
+  try {
+    return await db
+      .select()
+      .from(extractionHistory)
+      .where(eq(extractionHistory.userId, userId))
+      .orderBy(desc(extractionHistory.createdAt))
+      .limit(limit)
+      .offset(offset);
+  } catch (error) {
+    console.error("[Database] Failed to get extraction history:", error);
+    return [];
+  }
+}
+
+export async function getExtractionHistoryCount(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get extraction history count: database not available");
+    return 0;
+  }
+
+  try {
+    const result = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(extractionHistory)
+      .where(eq(extractionHistory.userId, userId));
+    return result[0]?.count || 0;
+  } catch (error) {
+    console.error("[Database] Failed to get extraction history count:", error);
+    return 0;
+  }
 }
 
 // TODO: add feature queries here as your schema grows.

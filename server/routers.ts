@@ -330,6 +330,23 @@ export const appRouter = router({
       const report = generateQualityReport(extractedData);
       return report;
     }),
+    
+    history: router({
+      list: publicProcedure.input((val: unknown) => {
+        const obj = val as any;
+        const limit = typeof obj?.limit === "number" ? Math.min(obj.limit, 100) : 50;
+        const offset = typeof obj?.offset === "number" ? Math.max(obj.offset, 0) : 0;
+        return { limit, offset };
+      }).query(async ({ input, ctx }) => {
+        if (!ctx.user) throw new Error("Unauthorized");
+        const { getExtractionHistory, getExtractionHistoryCount } = await import("./db");
+        const [items, total] = await Promise.all([
+          getExtractionHistory(ctx.user.id, input.limit, input.offset),
+          getExtractionHistoryCount(ctx.user.id),
+        ]);
+        return { items, total, limit: input.limit, offset: input.offset };
+      }),
+    }),
   }),
 });
 

@@ -83,3 +83,20 @@ export const products = mysqlTable("products", {
 
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
+
+
+/**
+ * Extraction history table for tracking all scraping attempts
+ */
+export const extractionHistory = mysqlTable("extractionHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sourceUrl: text("sourceUrl").notNull(),
+  productId: int("productId").references(() => products.id, { onDelete: "set null" }),
+  status: mysqlEnum("status", ["pending", "success", "error"]).default("pending").notNull(),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ExtractionHistory = typeof extractionHistory.$inferSelect;
+export type InsertExtractionHistory = typeof extractionHistory.$inferInsert;
