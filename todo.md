@@ -100,3 +100,14 @@
 - [x] Usar webscraper.io como padrão de referência para extração
 - [x] Testar scraper com múltiplos e-commerce
 - [x] Validar extração de dados estruturados
+
+
+## Fase 7: Scraper Robusto Baseado em Webscraper.io
+- [x] Implementar extração de tabelas HTML com seletores CSS
+- [x] Implementar extração de listas e elementos com padrões
+- [x] Implementar extração de dados estruturados (JSON-LD, microdata, Open Graph)
+- [x] Implementar extração de atributos HTML (data-*, aria-*, id, class)
+- [x] Melhorar extração de imagens com detecção de alt text
+- [x] Melhorar extração de meta tags
+- [x] Testar com webscraper.io como referência
+- [x] Validar extração com múltiplos e-commerce

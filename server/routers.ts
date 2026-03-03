@@ -46,7 +46,7 @@ export const appRouter = router({
     }).mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new Error("Unauthorized");
       
-      const { scrapeProductFromUrl } = await import("./scraper");
+      const { fetchHtmlContent, extractProductDataWithLLM } = await import("./scraper");
       const { createProduct, getProductById } = await import("./db");
       
       const sanitizeString = (str: string | undefined): string | null => {
@@ -55,7 +55,8 @@ export const appRouter = router({
       };
       
       try {
-        const { data } = await scrapeProductFromUrl(input.url);
+        const html = await fetchHtmlContent(input.url);
+        const data = await extractProductDataWithLLM(html, input.url);
         
         const result = await createProduct({
           userId: ctx.user.id,
@@ -240,7 +241,7 @@ export const appRouter = router({
     }).mutation(async ({ input, ctx }) => {
       if (!ctx.user) throw new Error("Unauthorized");
       
-      const { scrapeProductFromUrl } = await import("./scraper");
+      const { fetchHtmlContent, extractProductDataWithLLM } = await import("./scraper");
       const { createProduct } = await import("./db");
       
       const results = {
@@ -260,7 +261,8 @@ export const appRouter = router({
         await Promise.all(
           batch.map(async (url) => {
             try {
-              const { data } = await scrapeProductFromUrl(url);
+              const html = await fetchHtmlContent(url);
+              const data = await extractProductDataWithLLM(html, url);
               
               const result = await createProduct({
                 userId: ctx.user!.id,
