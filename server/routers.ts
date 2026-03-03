@@ -157,6 +157,153 @@ export const appRouter = router({
       await deleteProduct(input);
       return { success: true };
     }),
+    
+    search: publicProcedure.input((val: unknown) => {
+      if (typeof val === "object" && val !== null && "query" in val) {
+        return { query: String((val as any).query || "") };
+      }
+      throw new Error("Invalid search input");
+    }).query(async ({ input, ctx }) => {
+      if (!ctx.user) return [];
+      const { getDb } = await import("./db");
+      const db = await getDb();
+      if (!db) return [];
+      
+      const { products } = await import("../drizzle/schema");
+      const { like, and, eq } = await import("drizzle-orm");
+      
+      const query = `%${input.query}%`;
+      const results = await db
+        .select()
+        .from(products)
+        .where(
+          and(
+            eq(products.userId, ctx.user.id),
+            like(products.name, query)
+          )
+        )
+        .limit(20);
+      
+      return results;
+    }),
+    
+    duplicate: publicProcedure.input((val: unknown) => {
+      if (typeof val === "number") return val;
+      throw new Error("Invalid product ID");
+    }).mutation(async ({ input, ctx }) => {
+      if (!ctx.user) throw new Error("Unauthorized");
+      
+      const { getProductById, createProduct } = await import("./db");
+      const original = await getProductById(input);
+      
+      if (!original || original.userId !== ctx.user.id) {
+        throw new Error("Product not found or unauthorized");
+      }
+      
+      const duplicated = await createProduct({
+        userId: ctx.user.id,
+        sourceUrl: original.sourceUrl,
+        name: original.name ? `${original.name} (Cópia)` : null,
+        description: original.description,
+        price: original.price,
+        originalPrice: original.originalPrice,
+        currency: original.currency,
+        sku: original.sku,
+        category: original.category,
+        brand: original.brand,
+        availability: original.availability,
+        availabilityQuantity: original.availabilityQuantity,
+        images: original.images,
+        specifications: original.specifications,
+        nutritionalInfo: original.nutritionalInfo,
+        variants: original.variants,
+        rating: original.rating,
+        reviewCount: original.reviewCount,
+        reviews: original.reviews,
+        metaTitle: original.metaTitle,
+        metaDescription: original.metaDescription,
+        metaKeywords: original.metaKeywords,
+        weight: original.weight,
+        dimensions: original.dimensions,
+        shippingTime: original.shippingTime,
+        status: "success",
+      });
+      
+      return { success: true, product: duplicated };
+    }),
+    
+    batchScrape: publicProcedure.input((val: unknown) => {
+      if (Array.isArray(val)) {
+        return val.filter(url => typeof url === "string").slice(0, 50);
+      }
+      throw new Error("Invalid URLs input");
+    }).mutation(async ({ input, ctx }) => {
+      if (!ctx.user) throw new Error("Unauthorized");
+      
+      const { scrapeProductFromUrl } = await import("./scraper");
+      const { createProduct } = await import("./db");
+      
+      const results = {
+        success: [] as any[],
+        failed: [] as { url: string; error: string }[],
+      };
+      
+      const sanitizeString = (str: string | undefined): string | null => {
+        if (!str) return null;
+        return String(str).substring(0, 5000);
+      };
+      
+      const maxConcurrent = 5;
+      for (let i = 0; i < input.length; i += maxConcurrent) {
+        const batch = input.slice(i, i + maxConcurrent);
+        
+        await Promise.all(
+          batch.map(async (url) => {
+            try {
+              const { data } = await scrapeProductFromUrl(url);
+              
+              const result = await createProduct({
+                userId: ctx.user!.id,
+                sourceUrl: url,
+                name: sanitizeString(data.name),
+                description: sanitizeString(data.description),
+                price: sanitizeString(data.price),
+                originalPrice: sanitizeString(data.originalPrice),
+                currency: sanitizeString(data.currency),
+                sku: sanitizeString(data.sku),
+                category: sanitizeString(data.category),
+                brand: sanitizeString(data.brand),
+                availability: sanitizeString(data.availability),
+                availabilityQuantity: data.availabilityQuantity || null,
+                images: data.images && data.images.length > 0 ? JSON.stringify(data.images.slice(0, 20)) : null,
+                specifications: data.specifications ? JSON.stringify(data.specifications) : null,
+                nutritionalInfo: data.nutritionalInfo ? JSON.stringify(data.nutritionalInfo) : null,
+                variants: data.variants ? JSON.stringify(data.variants) : null,
+                rating: sanitizeString(data.rating),
+                reviewCount: data.reviewCount || null,
+                reviews: data.reviews ? JSON.stringify(data.reviews.slice(0, 10)) : null,
+                metaTitle: sanitizeString(data.metaTitle),
+                metaDescription: sanitizeString(data.metaDescription),
+                metaKeywords: sanitizeString(data.metaKeywords),
+                weight: sanitizeString(data.weight),
+                dimensions: data.dimensions ? JSON.stringify(data.dimensions) : null,
+                shippingTime: sanitizeString(data.shippingTime),
+                rawHtml: null,
+                extractedData: JSON.stringify(data),
+                status: "success",
+              });
+              
+              results.success.push({ url, id: (result as any).insertId });
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : "Unknown error";
+              results.failed.push({ url, error: errorMessage });
+            }
+          })
+        );
+      }
+      
+      return results;
+    }),
   }),
 });
 

@@ -79,3 +79,16 @@
 - [x] Extrair avaliacoes e reviews
 - [x] Extrair variantes do produto
 - [x] Testar com URLs reais de e-commerce
+
+
+## Fase 5: Busca, Duplicação e Importação em Lote
+- [x] Implementar busca em tempo real na Home com debounce de 300ms
+- [x] Adicionar filtros por nome, SKU e marca
+- [x] Implementar procedimento tRPC de busca
+- [x] Criar botão "Clonar" na página de detalhes
+- [x] Implementar procedimento tRPC de duplicação
+- [x] Criar interface de upload CSV para importação em lote
+- [x] Implementar scraping paralelo (máximo 5 URLs simultâneas)
+- [x] Adicionar barra de progresso para importação
+- [x] Criar relatório de sucesso/erro da importação
+- [x] Testar todas as funcionalidades
