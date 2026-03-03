@@ -77,64 +77,72 @@ export async function extractProductDataWithLLM(
   sourceUrl: string
 ): Promise<ScrapedProductData> {
   try {
-    const truncatedHtml = html.substring(0, 50000);
+    const truncatedHtml = html.substring(0, 80000);
+
+    const systemPrompt = `You are an expert at extracting product information from e-commerce HTML pages, especially VTEX and Brazilian e-commerce platforms.
+
+ANALYZE THE HTML VERY CAREFULLY AND EXTRACT ALL AVAILABLE PRODUCT INFORMATION COMPREHENSIVELY.
+
+Return ONLY a valid JSON object with this structure (omit fields not found):
+{
+  "name": "Complete product name/title",
+  "description": "Full product description with all details",
+  "price": "Current price with currency symbol (e.g., R$ 26,90)",
+  "originalPrice": "Original price before discount if available",
+  "currency": "Currency code or symbol (BRL, R$, etc.)",
+  "sku": "Product SKU/code",
+  "category": "Full category path",
+  "brand": "Product brand/manufacturer",
+  "availability": "Stock status (Em Estoque, Fora de Estoque, etc.)",
+  "availabilityQuantity": "Quantity as number",
+  "images": ["image_url_1", "image_url_2"],
+  "specifications": {"spec_name": "spec_value"},
+  "nutritionalInfo": {"nutrient": "value"},
+  "variants": [{"option": "value"}],
+  "rating": "Rating number (e.g., 4.5)",
+  "reviewCount": "Number of reviews",
+  "reviews": [{"author": "name", "rating": "5", "text": "review"}],
+  "metaTitle": "Page title",
+  "metaDescription": "Page description",
+  "metaKeywords": "Page keywords",
+  "weight": "Weight with unit (e.g., 450g, 1kg)",
+  "dimensions": {"height": "value", "width": "value", "length": "value"},
+  "shippingTime": "Shipping time (e.g., 2-5 dias uteis)"
+}
+
+CRITICAL EXTRACTION RULES:
+1. EXTRACT EVERY VISIBLE PIECE OF INFORMATION
+2. For name: Get the complete product title/name
+3. For description: Extract FULL description, not just summary
+4. For price: Include currency symbol exactly as shown (R$ 26,90 not 26.90)
+5. For specifications: Look in tables, lists, accordion sections, data attributes
+6. For nutritional info: Extract from nutrition labels/tables completely
+7. For images: Get ALL product images with absolute URLs
+8. For weight/dimensions: Include units exactly (450,0000 GRM, 10cm, etc.)
+9. For variants: Extract all color, size, flavor options
+10. For ratings: Look for star ratings and review counts
+11. Search for VTEX data-* attributes and JSON-LD structured data
+12. Extract from meta tags, H1, product details sections
+13. Return ONLY valid JSON - no markdown, no extra text
+14. If field not found, omit it from response
+15. Be thorough and extract EVERYTHING available on the page`;
 
     const response = await invokeLLM({
       messages: [
         {
           role: "system",
-          content: `You are an expert at extracting product information from e-commerce HTML pages, especially VTEX and Brazilian e-commerce platforms.
-
-Analyze the provided HTML and extract ALL available product information comprehensively.
-
-Return a JSON object with the following structure:
-{
-  "name": "Product name",
-  "description": "Product description or summary",
-  "price": "Current price (just the number or with currency symbol)",
-  "originalPrice": "Original price before discount (if available)",
-  "currency": "Currency code (BRL, USD, EUR, etc.) or empty string",
-  "sku": "Product SKU or code",
-  "category": "Product category path (e.g., Electronics > Smartphones)",
-  "brand": "Product brand/manufacturer",
-  "availability": "Availability status (in stock, out of stock, pre-order, etc.)",
-  "availabilityQuantity": "Quantity available as number",
-  "images": ["URL1", "URL2", ...],
-  "specifications": {"spec_name": "spec_value", ...},
-  "nutritionalInfo": {"nutrient_name": "nutrient_value", ...},
-  "variants": [{"variant_name": "variant_value", ...}],
-  "rating": "Average rating (e.g., 4.5)",
-  "reviewCount": "Number of reviews as number",
-  "reviews": [{"author": "name", "rating": "5", "text": "review text"}],
-  "metaTitle": "Page title from meta tags",
-  "metaDescription": "Page description from meta tags",
-  "metaKeywords": "Page keywords from meta tags",
-  "weight": "Product weight (e.g., 500g, 1kg)",
-  "dimensions": {"height": "10cm", "width": "5cm", "depth": "3cm"},
-  "shippingTime": "Estimated shipping time (e.g., 2-5 business days)"
-}
-
-Rules:
-- Extract ALL specifications and nutritional information found
-- For images, extract full URLs (absolute URLs, not relative)
-- Look for VTEX-specific patterns and common Brazilian e-commerce structures
-- Extract price with and without discount if available
-- Extract all product variants/options
-- Extract ratings and reviews if available
-- If a field is not found, omit it or use null
-- Be precise and extract exact values from the HTML
-- Handle different HTML structures intelligently`,
+          content: systemPrompt,
         },
         {
           role: "user",
-          content: `Extract comprehensive product information from this HTML: ${truncatedHtml}`,
+          content: `Extract ALL product information from this HTML page. Be comprehensive and extract every detail available:\n\n${truncatedHtml}`,
         },
       ],
       response_format: {
         type: "json_schema",
         json_schema: {
           name: "product_extraction_vtex",
-          strict: true,
+          strict: false,
           schema: {
             type: "object",
             properties: {
@@ -149,17 +157,17 @@ Rules:
               availability: { type: "string" },
               availabilityQuantity: { type: "number" },
               images: { type: "array", items: { type: "string" } },
-              specifications: { type: "object", additionalProperties: { type: "string" } },
-              nutritionalInfo: { type: "object", additionalProperties: { type: "string" } },
-              variants: { type: "array", items: { type: "object" } },
+              specifications: { type: "object" },
+              nutritionalInfo: { type: "object" },
+              variants: { type: "array" },
               rating: { type: "string" },
               reviewCount: { type: "number" },
-              reviews: { type: "array", items: { type: "object" } },
+              reviews: { type: "array" },
               metaTitle: { type: "string" },
               metaDescription: { type: "string" },
               metaKeywords: { type: "string" },
               weight: { type: "string" },
-              dimensions: { type: "object", additionalProperties: { type: "string" } },
+              dimensions: { type: "object" },
               shippingTime: { type: "string" },
             },
             required: [],

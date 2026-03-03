@@ -66,3 +66,16 @@
 - [ ] Criar tabela de histórico com data/hora de extrações
 - [ ] Adicionar filtros por data, status e URL
 - [ ] Implementar reextração de URLs anteriores
+
+
+## Melhorias de Extracao de Campos
+- [x] Melhorar prompt do LLM para extrair TODOS os campos disponiveis na pagina
+- [x] Extrair descricao completa do produto
+- [x] Extrair especificacoes tecnicas detalhadas
+- [x] Extrair informacoes nutricionais completas
+- [x] Extrair todas as imagens disponiveis
+- [x] Extrair meta tags e SEO
+- [x] Extrair dimensoes e peso
+- [x] Extrair avaliacoes e reviews
+- [x] Extrair variantes do produto
+- [x] Testar com URLs reais de e-commerce
