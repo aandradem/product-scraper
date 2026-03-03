@@ -19,13 +19,34 @@ export default function ProductDetail({ id }: ProductDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
-  const productQuery = trpc.products.getById.useQuery(parseInt(id));
+  const productId = parseInt(id, 10);
+  const isValidId = !isNaN(productId) && productId > 0;
+
+  const productQuery = trpc.products.getById.useQuery(productId, {
+    enabled: isValidId && isAuthenticated,
+  });
   const updateMutation = trpc.products.update.useMutation();
   const deleteMutation = trpc.products.delete.useMutation();
 
   if (!isAuthenticated) {
     setLocation("/");
     return null;
+  }
+
+  if (!isValidId) {
+    return (
+      <div className="container mx-auto py-12">
+        <Button variant="outline" onClick={() => setLocation("/")} className="mb-6">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
+        <Card className="shadow-lg border-0">
+          <CardContent className="py-12 text-center">
+            <p className="text-gray-600 dark:text-gray-400">ID de produto inválido</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (productQuery.isLoading) {

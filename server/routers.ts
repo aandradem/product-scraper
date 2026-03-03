@@ -25,11 +25,17 @@ export const appRouter = router({
     }),
     
     getById: publicProcedure.input((val: unknown) => {
-      if (typeof val === "number") return val;
-      throw new Error("Invalid input");
+      if (typeof val === "number" && val > 0 && Number.isInteger(val)) {
+        return val;
+      }
+      throw new Error("Invalid product ID");
     }).query(async ({ input }) => {
       const { getProductById } = await import("./db");
-      return getProductById(input);
+      const product = await getProductById(input);
+      if (!product) {
+        throw new Error("Product not found");
+      }
+      return product;
     }),
     
     scrape: publicProcedure.input((val: unknown) => {

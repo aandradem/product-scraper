@@ -45,3 +45,4 @@
 ## Bugs Encontrados
 - [x] Corrigir erro de inserção SQL ao armazenar HTML com caracteres especiais
 - [x] Validar e sanitizar dados antes de inserir no banco de dados
+- [x] Corrigir erro de NaN ao buscar produto por ID (validação de parseInt)
