@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, Product, InsertProduct, products } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -131,6 +131,26 @@ export async function deleteProduct(id: number) {
     throw new Error("Database not available");
   }
   await db.delete(products).where(eq(products.id, id));
+}
+
+export async function searchProducts(userId: number, query: string) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+  const result = await db
+    .select()
+    .from(products)
+    .where(
+      sql`${products.userId} = ${userId} AND (
+        ${products.name} LIKE ${`%${query}%`} OR
+        ${products.sku} LIKE ${`%${query}%`} OR
+        ${products.brand} LIKE ${`%${query}%`} OR
+        ${products.category} LIKE ${`%${query}%`}
+      )`
+    )
+    .orderBy(desc(products.createdAt));
+  return result;
 }
 
 // TODO: add feature queries here as your schema grows.

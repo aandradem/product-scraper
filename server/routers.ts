@@ -306,6 +306,28 @@ export const appRouter = router({
       
       return results;
     }),
+    
+
+    
+    getQualityReport: publicProcedure.input((val: unknown) => {
+      if (typeof val === "number" && val > 0 && Number.isInteger(val)) {
+        return val;
+      }
+      throw new Error("Invalid product ID");
+    }).query(async ({ input, ctx }) => {
+      if (!ctx.user) throw new Error("Unauthorized");
+      const { getProductById } = await import("./db");
+      const { generateQualityReport } = await import("./validation");
+      
+      const product = await getProductById(input);
+      if (!product || product.userId !== ctx.user.id) {
+        throw new Error("Product not found or unauthorized");
+      }
+      
+      const extractedData = product.extractedData ? JSON.parse(product.extractedData) : {};
+      const report = generateQualityReport(extractedData);
+      return report;
+    }),
   }),
 });
 

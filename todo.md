@@ -111,3 +111,16 @@
 - [x] Melhorar extração de meta tags
 - [x] Testar com webscraper.io como referência
 - [x] Validar extração com múltiplos e-commerce
+
+
+## Fase 8: Validação de Qualidade com Score de Confiança
+- [x] Criar sistema de validação de qualidade para cada campo
+- [x] Implementar cálculo de score de confiança (0-100%)
+- [x] Adicionar validação de formato (preço, dimensões, peso)
+- [x] Adicionar validação de completude (campos obrigatórios)
+- [x] Adicionar validação de consistência (dados relacionados)
+- [x] Integrar validação ao scraper
+- [x] Adicionar campos de score ao banco de dados
+- [x] Criar interface de visualização de scores
+- [x] Exibir score por campo na página de detalhes
+- [x] Testar validação com múltiplos produtos

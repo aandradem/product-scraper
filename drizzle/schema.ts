@@ -68,6 +68,10 @@ export const products = mysqlTable("products", {
   dimensions: text("dimensions"),
   shippingTime: varchar("shippingTime", { length: 100 }),
   
+  // Quality and validation
+  qualityScore: int("qualityScore"),
+  qualityReport: text("qualityReport"),
+  
   // Additional fields
   rawHtml: text("rawHtml"),
   extractedData: text("extractedData"),
