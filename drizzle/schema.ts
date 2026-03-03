@@ -25,4 +25,30 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Products table for storing scraped e-commerce product data
+ */
+export const products = mysqlTable("products", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sourceUrl: text("sourceUrl").notNull(),
+  name: text("name"),
+  description: text("description"),
+  price: varchar("price", { length: 100 }),
+  currency: varchar("currency", { length: 10 }),
+  images: text("images"), // JSON array of image URLs
+  specifications: text("specifications"), // JSON object of specs
+  nutritionalInfo: text("nutritionalInfo"), // JSON object of nutritional data
+  metaTitle: text("metaTitle"),
+  metaDescription: text("metaDescription"),
+  metaKeywords: text("metaKeywords"),
+  rawHtml: text("rawHtml"), // Store original HTML for reference
+  extractedData: text("extractedData"), // JSON with all extracted fields
+  status: mysqlEnum("status", ["pending", "success", "error"]).default("pending").notNull(),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
