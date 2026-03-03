@@ -145,3 +145,9 @@
 - [x] Redesenhar página de produto com layout melhorado
 - [x] Adicionar mais campos na visualização de detalhes
 - [x] Melhorar descrição do produto na página de detalhes
+
+
+## Bugs Críticos - Fase 11
+- [x] Corrigir erro de ID na página de produto /product/90002
+- [x] Validar que a página abre com IDs válidos
+- [x] Melhorar tratamento de erros de ID inválido
