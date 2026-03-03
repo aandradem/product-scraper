@@ -41,41 +41,51 @@ export const appRouter = router({
       if (!ctx.user) throw new Error("Unauthorized");
       
       const { scrapeProductFromUrl } = await import("./scraper");
-      const { createProduct } = await import("./db");
+      const { createProduct, getProductById } = await import("./db");
+      
+      const sanitizeString = (str: string | undefined): string | null => {
+        if (!str) return null;
+        return String(str).substring(0, 5000);
+      };
       
       try {
-        const { data, html } = await scrapeProductFromUrl(input.url);
+        const { data } = await scrapeProductFromUrl(input.url);
         
-        const product = await createProduct({
+        const result = await createProduct({
           userId: ctx.user.id,
           sourceUrl: input.url,
-          name: data.name,
-          description: data.description,
-          price: data.price,
-          currency: data.currency,
-          images: data.images ? JSON.stringify(data.images) : null,
+          name: sanitizeString(data.name),
+          description: sanitizeString(data.description),
+          price: sanitizeString(data.price),
+          currency: sanitizeString(data.currency),
+          images: data.images && data.images.length > 0 ? JSON.stringify(data.images.slice(0, 20)) : null,
           specifications: data.specifications ? JSON.stringify(data.specifications) : null,
           nutritionalInfo: data.nutritionalInfo ? JSON.stringify(data.nutritionalInfo) : null,
-          metaTitle: data.metaTitle,
-          metaDescription: data.metaDescription,
-          metaKeywords: data.metaKeywords,
-          rawHtml: html.substring(0, 100000),
+          metaTitle: sanitizeString(data.metaTitle),
+          metaDescription: sanitizeString(data.metaDescription),
+          metaKeywords: sanitizeString(data.metaKeywords),
+          rawHtml: null,
           extractedData: JSON.stringify(data),
           status: "success",
         });
         
-        const createdProduct = await (await import("./db")).getProductById((product as any).insertId);
+        const createdProduct = await getProductById((result as any).insertId);
         return { success: true, product: createdProduct };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("Scraping error:", error);
         
-        const { createProduct } = await import("./db");
-        const product = await createProduct({
-          userId: ctx.user.id,
-          sourceUrl: input.url,
-          status: "error",
-          errorMessage,
-        });
+        try {
+          const { createProduct: createErrorProduct } = await import("./db");
+          await createErrorProduct({
+            userId: ctx.user.id,
+            sourceUrl: input.url,
+            status: "error",
+            errorMessage: sanitizeString(errorMessage),
+          });
+        } catch (dbError) {
+          console.error("Failed to save error product:", dbError);
+        }
         
         throw new Error(`Scraping failed: ${errorMessage}`);
       }

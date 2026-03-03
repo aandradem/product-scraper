@@ -40,3 +40,8 @@
 - [x] Tratamento de edge cases
 - [x] Documentação de uso
 - [x] Deploy final
+
+
+## Bugs Encontrados
+- [x] Corrigir erro de inserção SQL ao armazenar HTML com caracteres especiais
+- [x] Validar e sanitizar dados antes de inserir no banco de dados
