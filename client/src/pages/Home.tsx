@@ -1,13 +1,13 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader2, Sparkles, Link as LinkIcon, Database, Download, Edit2, Upload, Copy, Trash2, Search } from "lucide-react";
+import { Loader2, Sparkles, Link as LinkIcon, Database, Download, Edit2, Upload, Copy, Trash2, Search, BarChart3 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { useLocation } from "wouter";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
@@ -145,13 +145,23 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800">
       <div className="container mx-auto py-12">
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Product Scraper
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Bem-vindo, {user?.name}! Extraia informações de produtos com IA.
-          </p>
+        <div className="mb-12 flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              Product Scraper
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Bem-vindo, {user?.name}! Extraia informações de produtos com IA.
+            </p>
+          </div>
+          <Button
+            onClick={() => setLocation("/quality-dashboard")}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Dashboard de Qualidade
+          </Button>
         </div>
 
         {/* Scraping Form */}
