@@ -319,15 +319,17 @@ export default function Home() {
                       </p>
                     )}
                     
-                    <div className="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700 mb-4">
-                      {product.images && JSON.parse(product.images as string).length > 0 && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {JSON.parse(product.images as string).length} imagens
+                    <div className="grid grid-cols-2 gap-2 pt-4 border-t border-gray-200 dark:border-gray-700 mb-4">
+                      {product.price && (
+                        <div className="text-xs">
+                          <p className="text-gray-500 dark:text-gray-400">Preco</p>
+                          <p className="font-semibold text-blue-600 dark:text-blue-400">{product.currency} {product.price}</p>
                         </div>
                       )}
-                      {product.specifications && Object.keys(JSON.parse(product.specifications as string)).length > 0 && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {Object.keys(JSON.parse(product.specifications as string)).length} specs
+                      {product.sku && (
+                        <div className="text-xs">
+                          <p className="text-gray-500 dark:text-gray-400">SKU</p>
+                          <p className="font-semibold text-gray-900 dark:text-white truncate">{product.sku}</p>
                         </div>
                       )}
                     </div>
