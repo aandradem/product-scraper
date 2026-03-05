@@ -51,9 +51,9 @@ export const appRouter = router({
       const { fetchHtmlContent, extractProductDataWithLLM } = await import("./scraper");
       const { createProduct, getProductById } = await import("./db");
       
-      const sanitizeString = (str: string | undefined): string | null => {
+      const sanitizeString = (str: string | undefined, maxLength: number = 500): string | null => {
         if (!str) return null;
-        return String(str).substring(0, 5000);
+        return String(str).substring(0, maxLength);
       };
       
       try {
@@ -83,11 +83,11 @@ export const appRouter = router({
           metaTitle: sanitizeString(data.metaTitle),
           metaDescription: sanitizeString(data.metaDescription),
           metaKeywords: sanitizeString(data.metaKeywords),
-          weight: sanitizeString(data.weight),
+          weight: sanitizeString(data.weight, 100),
           dimensions: data.dimensions ? JSON.stringify(data.dimensions) : null,
           shippingTime: sanitizeString(data.shippingTime),
           rawHtml: null,
-          extractedData: JSON.stringify(data),
+          extractedData: JSON.stringify(data).substring(0, 65000),
           status: "success",
         });
         
@@ -251,9 +251,9 @@ export const appRouter = router({
         failed: [] as { url: string; error: string }[],
       };
       
-      const sanitizeString = (str: string | undefined): string | null => {
+      const sanitizeString = (str: string | undefined, maxLength: number = 500): string | null => {
         if (!str) return null;
-        return String(str).substring(0, 5000);
+        return String(str).substring(0, maxLength);
       };
       
       const maxConcurrent = 5;
@@ -289,11 +289,11 @@ export const appRouter = router({
                 metaTitle: sanitizeString(data.metaTitle),
                 metaDescription: sanitizeString(data.metaDescription),
                 metaKeywords: sanitizeString(data.metaKeywords),
-                weight: sanitizeString(data.weight),
+                weight: sanitizeString(data.weight, 100),
                 dimensions: data.dimensions ? JSON.stringify(data.dimensions) : null,
                 shippingTime: sanitizeString(data.shippingTime),
                 rawHtml: null,
-                extractedData: JSON.stringify(data),
+                extractedData: JSON.stringify(data).substring(0, 65000),
                 status: "success",
               });
               

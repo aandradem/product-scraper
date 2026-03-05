@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,12 +7,10 @@ import { useLocation } from "wouter";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 
-interface ProductDetailProps {
-  id: string;
-}
-
-export default function ProductDetail({ id }: ProductDetailProps) {
+export default function ProductDetail({ params }: { params: { id: string } }) {
+  const id = params.id;
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
